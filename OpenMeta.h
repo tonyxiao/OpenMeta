@@ -252,5 +252,6 @@ extern const double kOMMaxRating;
 +(void)registerOMAttributes:(NSDictionary*)typicalAttributes forAppName:(NSString*)appName;
 
 +(NSString*)spotlightKey:(NSString*)inKeyName;
++(NSString*)openmetaKey:(NSString*)inKeyName;
 
 @end

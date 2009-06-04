@@ -741,6 +741,9 @@ BOOL gOMIsTerminating = NO;
 			return; // found a backup file that looked good enough to use.
 	}
 	
+	// only if a delay is specified do I search through the directory: the code below takes too long to run when we are called in main thread, etc...
+	if (inDelay == 0.0)
+		return; 
 	
 	// filenames are trunced to 40 chars in the stamp
 	NSString* fileNameToLookFor = [self truncatedPathComponent:[inPath lastPathComponent]];

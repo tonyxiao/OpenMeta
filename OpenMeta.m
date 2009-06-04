@@ -555,11 +555,6 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 	// then removes it with another, possibly old openmeta app, or some other application that uses 
 	// its own method to call setxattr() directly, the mirrored tags will be old and wrong.
 	// So it seems that we would only want to restore from the mirrored tags with a rewrite of how open meta works,
-	// plus a restore - but since we have to go to these lengths - and the results will still not be accurate (as the mirrored tags could be old, etc)
-	// then why not just use the backup files, and restore from them to this hypothetical 'new' system?
-	// id obj = [self getXAttr:[self spotlightKey:metaDataKey] path:path error:error];
-	// if (obj == nil)
-	//		obj = [self getXAttr:metaDataKey path:path error:error];
 }
 
 //----------------------------------------------------------------------
@@ -576,21 +571,12 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 //----------------------------------------------------------------------
 +(NSError*)setXAttrMetaData:(id)plistObject metaDataKey:(NSString*)metaDataKey path:(NSString*)path;
 {
-	// Mirroring:
-	// in order to guard against the possible removal of all com.apple.metadata* keys from the xattrs on files, 
-	// we might take this opportunity to also set the data on the plain key: 
-	// This results in data duplication and not everyone agrees that it is a wholly good or neccessary thing:
-	// EG: In case of disagreement between com.apple.metadata:kOMUserTags and kOMUserTags who wins? 
-	// The way its coded now, com.apple.metadata:kOMUserTags wins. But in the eventuality of the com.apple.metadata keys being deleted by apple 
-	// without asking the user, we could use these stored keys to get things going again. 
-	// It is actually more error prone than it looks at first blush - there are lots of ways for mirrored tags to be out of wack. 
-	// So I'm leaving this off. 
-	// So the official 'way' to get back tags, etc after some deliberate erasure by Apple of all com.apple.metadata* tags is to do a restore from backup files into 
-	// a format that does not use com.apple.metadata. This is also the way to get back tags after the files have been washed of attributes by a trip to some old fat32 drive, adobe etc.
-	// one restore method.
-	// [self setXAttr:plistObject forKey:metaDataKey path:path];
+	// Mirroring: mirror all data to our own open meta domain name
+	[self setXAttr:plistObject forKey:[self openmetaKey:metaDataKey] path:path];
 	
 	NSError* error = [self setXAttr:plistObject forKey:[self spotlightKey:metaDataKey] path:path];
+	
+	
 	return error;
 }
 
@@ -715,6 +701,23 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 +(NSString*)spotlightKey:(NSString*)inKeyName;
 {
 	return [@"com.apple.metadata:" stringByAppendingString:inKeyName];
+}
+
+//----------------------------------------------------------------------
+//	openmetaKey
+//
+//	Purpose:	store stuff in the openmeta key as well:
+//
+//	Inputs:		
+//
+//	Outputs:	
+//
+//  Created by Tom Andersen on 2008/07/17 
+//
+//----------------------------------------------------------------------
++(NSString*)openmetaKey:(NSString*)inKeyName;
+{
+	return [@"org.openmetainfo:" stringByAppendingString:inKeyName];
 }
 
 +(NSString*)errnoString:(int)errnoErr;
