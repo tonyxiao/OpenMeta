@@ -152,7 +152,7 @@
 	buFileName = [buFileName stringByAppendingString:fileNameHash];
 	buFileName = [buFileName stringByAppendingString:@"__"];
 	buFileName = [buFileName stringByAppendingString:folderHash];
-	[buFileName stringByAppendingString:@".omback"];
+	buFileName = [buFileName stringByAppendingString:@".omback"];
 	
 	return buFileName;
 }	
