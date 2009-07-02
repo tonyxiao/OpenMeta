@@ -574,8 +574,10 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 	// Mirroring: mirror all data to our own open meta domain name
 	[self setXAttr:plistObject forKey:[self openmetaKey:metaDataKey] path:path];
 	
-	NSError* error = [self setXAttr:plistObject forKey:[self spotlightKey:metaDataKey] path:path];
+	// set a time stamp (not in spotlight DB) for this operation
+	[self setXAttr:[NSDate date] forKey:[self openmetaTimeKey:metaDataKey] path:path];
 	
+	NSError* error = [self setXAttr:plistObject forKey:[self spotlightKey:metaDataKey] path:path];
 	
 	return error;
 }
@@ -719,6 +721,13 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 {
 	return [@"org.openmetainfo:" stringByAppendingString:inKeyName];
 }
+
++(NSString*)openmetaTimeKey:(NSString*)inKeyName;
+{
+	return [@"org.openmetainfo.time:" stringByAppendingString:inKeyName];
+}
+
+
 
 +(NSString*)errnoString:(int)errnoErr;
 {
@@ -870,7 +879,9 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 	}
 	else
 	{
-		if (errno != ENOATTR && error) // it is not an error to have no attribute set 
+		// I get EINVAL sometimes when setting/getting xattrs on afp servers running 10.5. When I get this error, I find that everything is working correctly... so it seems to make sense to ignore them
+		// EINVAL means invalid argument. I know that the args are fine. 
+		if ((errno != ENOATTR) && (errno != EINVAL) && error) // it is not an error to have no attribute set 
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:[NSDictionary dictionaryWithObject:[self errnoString:errno] forKey:@"info"]];
 		return nil;
 	}

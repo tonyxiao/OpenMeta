@@ -253,5 +253,6 @@ extern const double kOMMaxRating;
 
 +(NSString*)spotlightKey:(NSString*)inKeyName;
 +(NSString*)openmetaKey:(NSString*)inKeyName;
++(NSString*)openmetaTimeKey:(NSString*)inKeyName;
 
 @end

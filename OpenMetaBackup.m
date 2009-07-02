@@ -94,6 +94,10 @@
 	if (theNumber)
 		return YES;
 	
+	// if the ratings have been set, then removed, there will still be a time stamp for this.
+	if ([OpenMeta getXAttr:[OpenMeta openmetaTimeKey:(NSString*)kMDItemStarRating] path:inPath error:nil])
+		return YES;
+	
 	return NO;
 }
 
@@ -502,6 +506,7 @@ BOOL gOMIsTerminating = NO;
 		if (dataItem)
 		{
 			// only set data that is not already set - the idea of a backup is only replace if missing...
+			// TODO - look at the org.openmetainfo.time time stamps and use them.
 			id storedObject = [OpenMeta getXAttr:aKey path:inFile error:&error];
 			if (storedObject == nil)
 				error = [OpenMeta setXAttr:dataItem forKey:aKey path:inFile];
@@ -1004,7 +1009,8 @@ BOOL gOMBackupThreadBusy = NO;
 
 +(BOOL)attributeKeyMeansBackup:(NSString*)attrName;
 {
-	if ([attrName hasPrefix:@"kOM"] || [attrName hasPrefix:[OpenMeta spotlightKey:@"kOM"]] || [attrName hasPrefix:[OpenMeta spotlightKey:@"kMDItem"]] )
+	// the org.openmetainfo will grab the org.openmetainfo: and org.openmetainfo.time: 
+	if ([attrName hasPrefix:@"org.openmetainfo"] || [attrName hasPrefix:@"kOM"] || [attrName hasPrefix:[OpenMeta spotlightKey:@"kOM"]] || [attrName hasPrefix:[OpenMeta spotlightKey:@"kMDItem"]] )
 		return YES;
 	
 	return NO;
