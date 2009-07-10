@@ -208,7 +208,8 @@ NSString* const OM_CantSetMetadataErrorString = @"OpenMeta can't set the meta da
 		// this will likely work most of the time. In the case that some other child process finishes before the xattr call,
 		// the side effect will be to leave a few zombies lying around.
 		int status = 0;
-		waitpid(-1, &status, 0);
+		if (ret == errAuthorizationSuccess) // only wait if we actually launched xattr
+			waitpid(-1, &status, 0);
 	}
 	
 	if (ret == errAuthorizationSuccess)
