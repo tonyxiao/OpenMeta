@@ -9,6 +9,9 @@
 // This file is optional. If you use it you also need to use the Security Framework
 
 #import "OpenMetaAuthenticate.h"
+#include <sys/types.h>
+#include <sys/wait.h>
+
 
 NSString* const OM_CantSetMetadataErrorString = @"OpenMeta can't set the meta data, likely a permissions problem";
 
@@ -146,9 +149,67 @@ NSString* const OM_CantSetMetadataErrorString = @"OpenMeta can't set the meta da
 		args[3] = NULL;
 	}
 	
-	// as the docs say "AuthorizationExecuteWithPrivileges function poses a security concern because it will indiscriminately run any tool or application"
-	// but we are hard coding the tool to run - i think that this fixes that problem
-	OSStatus ret = AuthorizationExecuteWithPrivileges(authRef, "/usr/bin/xattr", kAuthorizationFlagDefaults, args, NULL);
+	// I think that by calling this in a synch fashion, we make the somewhat non robust use of waitpid work better.
+	// that way we wait for the right process to finish more of the time.
+	OSStatus ret = 0;
+	static NSNumber* theSyncItem = nil;
+	if (theSyncItem == nil)
+		theSyncItem = [[NSNumber alloc] initWithDouble:0.34343];
+	@synchronized(theSyncItem)
+	{
+		// as the docs say "AuthorizationExecuteWithPrivileges function poses a security concern because it will indiscriminately run any tool or application"
+		// but we are hard coding the tool to run - i think that this fixes that problem? Also the tool is located in an area that requires root access to over write.
+		// NOTE: Errors are printed to stderr, not stdout. "There's no way to capture it from the authorization API" so not much use connecting a pipe. 
+		// callers will need to attempt a read of the attributes they thought were set...
+		// In BetterAuthSample, Apple says that for occasional use that this is the right design pattern - to call AuthorizationExecuteWithPrivileges directly
+		ret = AuthorizationExecuteWithPrivileges(authRef, "/usr/bin/xattr", kAuthorizationFlagDefaults, args, NULL);
+		
+		// found on the internet. (with additions by Tom).
+		//What's This About Zombies?
+		//  --------------------------
+		//  AuthorizationExecuteWithPrivileges creates a process that runs with privileges. 
+		//  This process is a child of our process.  Thus, we need to reap the process 
+		//  (by calling <x-man-page://2/waitpid>).  If we don't do this, we create a 'zombie' 
+		//  process (<x-man-page://1/ps> displays its status as "Z") that persists until 
+		//  our process quits (at which point the zombie gets reparented to launchd, and 
+		//  launchd automatically reaps it).  Zombies are generally considered poor form. 
+		//  Thus, we want to avoid creating them.
+		
+		// Tom adds: With about 200 to 300 calls to this, we make enough zombies that for whatever reason  
+		//  applications refuse to launch on the machine (10.5 anyways), (terminal sessions too), with an -10810 error.
+		// Other people claim that there is no problem (other than small resource usage) with having lots of zombies,
+		// so I wonder if the problem is that these are _ Python _ zombies, which do sound pretty scary, bein like undead snakes and all.
+		//  example ps -Av listing:
+		//11884 Z      0:00.00   0   0      0        0      0     -        0   0.0  0.0 (Python)
+		//11883 Z      0:00.00   0   0      0        0      0     -        0   0.0  0.0 (Python)
+		//11882 Z      0:00.00   0   0      0        0      0     -        0   0.0  0.0 (Python)
+		//11878 Z      0:00.00   0   0      0        0      0     -        0   0.0  0.0 (Python)
+		//11877 Z      0:00.00   0   0      0        0      0     -        0   0.0  0.0 (Python)
+		//11876 Z      0:00.00   0   0      0        0      0     -        0   0.0  0.0 (Python)
+		//
+		// Too many of these python zombies and you run into the 'The Application xxxxx cannot be launched" -10810 error dialog.
+		
+		//  Unfortunately, AEWP doesn't return the process ID of the child process 
+		//  <rdar://problem/3090277>, which makes it challenging for us to reap it.  We could 
+		//  reap all children (by passing -1 to waitpid) but that's not cool for library code 
+		//  (we could end up reaping a child process that's completely unrelated to this 
+		//  code, perhaps created by some other part of the host application).  Thus, we need 
+		//  to find the child process's PID.  And the only way to do that is for the child 
+		//  process to tell us.
+		//
+		//  So, in the child process (the install tool) we echo the process ID and in the 
+		//  parent we look for that in the returned text.  *sigh*  It's pretty ugly, but 
+		//  that's the best I can come up with.  We delimit the process ID with some 
+		//  pretty distinctive text to make it clear that we've got the right thing.
+
+		// tom adds:
+		//	This IS library code - but I don't want to make a wrapper for xattr, 
+		//	so I wait for any child process to finish... 
+		// this will likely work most of the time. In the case that some other child process finishes before the xattr call,
+		// the side effect will be to leave a few zombies lying around.
+		int status = 0;
+		waitpid(-1, &status, 0);
+	}
 	
 	if (ret == errAuthorizationSuccess)
 		return nil;
