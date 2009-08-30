@@ -13,6 +13,10 @@
 #import "OpenMeta.h"
 #import "OpenMetaBackup.h"
 
+NSString* kBackupPath = @"~/Library/Application Support/OpenMeta/backups"; // i guess this should be some messy cocoa special folder lookup for application support
+
+BOOL gDoOpenMetaBackups = YES; // mechanism for shutting down backups - place txt file at ~/Library/Application Support/OpenMeta/backups/No Backups Please.txt"
+
 @interface OpenMetaBackup (Private)
 +(NSString*)fsRefToPath:(FSRef*)inRef;
 +(NSData*)aliasDataForFSRef:(FSRef*)inRef;
@@ -63,7 +67,7 @@
 //				can be called many times in a row, will coalesce backup requests into one write
 //	
 //
-//	Inputs:		
+//	Inputs:		gDoOpenMetaBackups
 //
 //	Outputs:	
 //
@@ -72,6 +76,9 @@
 //----------------------------------------------------------------------
 +(void)backupMetadata:(NSString*)inPath;
 {
+	if (!gDoOpenMetaBackups)
+		return;
+	
 	if ([inPath length] == 0)
 		return;
 	
@@ -179,8 +186,7 @@
 //+    NSString *libraryDir = [NSSearchPathForDirectoriesInDomains( NSApplicationSupportDirectory,
 //                                                                  NSUserDomainMask,
 //                                                                  YES ) objectAtIndex:0];
-	NSString* backupPath = @"~/Library/Application Support/OpenMeta/backups"; // i guess this should be some messy cocoa special folder lookup for application support
-	backupPath = [backupPath stringByExpandingTildeInPath];
+	NSString* backupPath = [kBackupPath stringByExpandingTildeInPath];
 	
 	NSCalendarDate* todaysDate = [NSCalendarDate calendarDate];
 	
@@ -939,6 +945,11 @@ BOOL gOMBackupThreadBusy = NO;
 		static NSThread* buThread = nil;
 		if (buThread == nil)
 		{
+			// if there is a file called noBackup 
+			NSString* noBackupPath = [[kBackupPath stringByExpandingTildeInPath] stringByAppendingPathComponent:@"No Backups Please.txt"];
+			if ([[NSFileManager defaultManager] fileExistsAtPath:noBackupPath])
+				gDoOpenMetaBackups = NO;
+			
 			buThread = [[NSThread alloc] initWithTarget:self selector:@selector(backupThreadMain:) object:buThread];
 			[buThread start];
 		}
