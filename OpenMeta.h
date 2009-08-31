@@ -193,36 +193,6 @@ extern const double kOMMaxRating;
 // AND an xattr set on the file with com.apple.metadata:kOMLastPrintedInfo' which will be an array of the 'names' from the dicts. 
 // the 'name' would usually be used for search purposes. Other data can be 'anything'
 
-// arrays of dictionaries:
-// Spotlight can't have dictionaries in it's database. 
-// We can store an array of dictionaries, and in spotlight have an array of names of the
-// dictionaries. The names are optional in each dictionary, with the key @"name"
-// @"name" can be a string (usually), date, or nsnumber.  
-// To store a single dict, just use [NSArray arrayWithObject:myDict];
-+(NSError*)setDictionaries:(NSArray*)arrayOfDicts keyName:(NSString*)keyName path:(NSString*)path;
-+(NSArray*)getDictionaries:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
-+(NSArray*)getDictionariesNames:(NSString*)keyName path:(NSString*)path error:(NSError**)error; // returns array of names as strings, dates, or numbers
-
-// optional keys on any dict
-//					key "date" the date of the request time set, etc.
-
-
-// kOMBookmarks -	array of dictionaries
-//					key "name" searchable user entered name - page name, etc 
-//					key "url"	the url that the bookmark points to
-
-// kOMApproved -	array of dictionaries
-//					key "name" searchable name like "jim simpson" or "talisker" 
-//					key "date" the date of the approval
-
-// kOMWorkflow -	array of dictionaries
-//					key "name" searchable name like "jim simpson" or "taligent" 
-//					key "what" what needs done by that person/company - user entered - no robot commands!
-//					key "duedate" the due date of the request
-//					key "auto" dictionary of instructions for an automatic or robotic task
-
-// kOMProjects -	array of dictionaries (AKA cases in legal world)
-//					key "name" searchable name like "sampson" or "Orion Project" 
 
 // for meta data in arrays: The add call weeds out duplicates 
 +(NSArray*)getNSArrayMetaData:(NSString*)metaDataKey path:(NSString*)path error:(NSError**)error;
@@ -237,7 +207,16 @@ extern const double kOMMaxRating;
 +(id)getXAttrMetaData:(NSString*)metaDataKey path:(NSString*)path error:(NSError**)error;
 +(NSError*)setXAttrMetaData:(id)plistObject metaDataKey:(NSString*)metaDataKey path:(NSString*)path;
 
-// These getters and setters are to set xattr data that will be NOT read and indexed by spotlight
+// dictionaries:
+// Spotlight can't have dictionaries in it's database.
+// remember that. You can store dictionaries using getXAttrMetaDataNoSpotlightMirror, or just setXAttr
+
+
+// to set data with no spotlight mirror, use this. omKey is something like kOMSomeKeyThatsNotNeededInSpotlight
++(id)getXAttrMetaDataNoSpotlightMirror:(NSString*)omKey path:(NSString*)path error:(NSError**)error;
++(NSError*)setXAttrNoSpotlightMirror:(id)plistObject omKey:(NSString*)omKey path:(NSString*)path;
+
+// These getters and setters are to set xattr data that will be NOT read and indexed by spotlight - nor are openmeta time stamps set, nor is restore done on backup.
 // The passed plist object will be converted to data as a binary plist object. (plist object is for example an nsdictionary or nsarray)
 // You can pass data up to 4k (or close to that depending on how much the data takes up in binary plist format)
 +(id)getXAttr:(NSString*)inKeyName path:(NSString*)path error:(NSError**)error;

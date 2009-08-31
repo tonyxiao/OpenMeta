@@ -13,6 +13,8 @@
 #import "OpenMeta.h"
 #import "OpenMetaBackup.h"
 
+NSString* OpenMetaBackupSingleFileDoneNote = @"OpenMetaBackupSingleFileDoneNote";
+
 NSString* kBackupPath = @"~/Library/Application Support/OpenMeta/backups"; // i guess this should be some messy cocoa special folder lookup for application support
 
 BOOL gDoOpenMetaBackups = YES; // mechanism for shutting down backups - place txt file at ~/Library/Application Support/OpenMeta/backups/No Backups Please.txt"
@@ -30,11 +32,13 @@ BOOL gDoOpenMetaBackups = YES; // mechanism for shutting down backups - place tx
 +(void)enqueueBackupItem:(NSString*)inPath;
 +(NSString*)truncatedPathComponent:(NSString*)aPathComponent;
 +(void)backupMetadataNow:(NSString*)inPath;
-+(void)restoreMetadataDict:(NSDictionary*)buDict toFile:(NSString*)inFile;
++(int)restoreMetadataDict:(NSDictionary*)buDict toFile:(NSString*)inFile;
 +(BOOL)backupThreadIsBusy;
 +(BOOL)openMetaThreadIsBusy;
 +(NSDate*)modDateOfFile:(NSString*)inPath;
 +(NSDate*)creationDateOfFile:(NSString*)inPath;
++(void)singleFileQueueIsBusyError;
++(NSDictionary*)openMetaDictForPath:(NSString*)inPath;
 @end
 
 @implementation OpenMetaBackup
@@ -138,7 +142,59 @@ BOOL gDoOpenMetaBackups = YES; // mechanism for shutting down backups - place tx
 	[self restoreMetadata:inPath withDelay:0.0];
 }
 
+#pragma mark backup and restore to from single file
+NSOperationQueue* singleFileOperationQueue = nil;
 
++(NSOperationQueue*)singleFileQueue;
+{
+	if (singleFileOperationQueue == nil)
+		singleFileOperationQueue = [[NSOperationQueue alloc] init];
+	
+	return singleFileOperationQueue;
+}
+
+//----------------------------------------------------------------------
+//	backupAllMetadata (public call)
+//
+//	Purpose:	Make a single large backup file of all openmeta data. Data is obtained via a Spotlight Search on the passed keys.
+//				If the passed keys are empty or nil, then kOMUserTags, kMDItemStarRating and kOMManaged are backed up.
+//				This call is async. When the operation is done, a notification on the main thread will be sent out with a dictionary describing what happened.
+//
+//	Inputs:		
+//
+//	Outputs:	Note that all Openmeta data is backed up, not just the keys passed in. The passed in keys are for search only.
+//
+//  Created by Tom Andersen on 2009/01/26 
+//
+//----------------------------------------------------------------------
++(void)backupMetadataToSingleFile:(NSArray*)keysToSearch toFile:(NSString*)toFile;
+{
+	if ([[self singleFileQueue] operationCount] > 0)
+	{
+		[self singleFileQueueIsBusyError];
+		return;
+	}
+	
+	OpenMetaBackupOperation* newOperation = [[[OpenMetaBackupOperation alloc] init] autorelease];
+	newOperation.keysToSearch = keysToSearch;
+	newOperation.singleFile = toFile;
+	newOperation.writeFile = YES;
+	[[self singleFileQueue] addOperation:newOperation];
+}
+
++(void)restoreMetadataFromSingleFile:(NSString*)inBackupFile;
+{
+	if ([[self singleFileQueue] operationCount] > 0)
+	{
+		[self singleFileQueueIsBusyError];
+		return;
+	}
+	
+	OpenMetaBackupOperation* newOperation = [[[OpenMetaBackupOperation alloc] init] autorelease];
+	newOperation.singleFile = inBackupFile;
+	newOperation.writeFile = NO;
+	[[self singleFileQueue] addOperation:newOperation];
+}
 
 #pragma mark backup paths and stamps
 
@@ -274,6 +330,69 @@ BOOL gDoOpenMetaBackups = YES; // mechanism for shutting down backups - place tx
 BOOL gOMRestoreThreadBusy = NO;
 BOOL gOMIsTerminating = NO;
 
++(BOOL)backupDictsTheSame:(NSDictionary*)one two:(NSDictionary*)two;
+{
+	if ([one count] != [two count])
+		return NO;
+	
+	NSArray* keys = [one allKeys];
+	for (NSString* aKey in keys)
+	{
+		id obj1 = [one objectForKey:aKey];
+		id obj2 = [two objectForKey:aKey];
+		
+		// if both objects are dates, they will compare non equal, even though they both were spawned by the same date: the stored date in a backup file is only good to the second, I think that the binary plist gets more resolution?
+		if ([obj1 isKindOfClass:[NSDate class]] && [obj2 isKindOfClass:[NSDate class]])
+		{
+			// compare the dates
+			NSTimeInterval difference = [obj1 timeIntervalSinceDate:obj2];
+			if (fabs(difference) > 2.0)
+				return NO;
+		}
+		else 
+		{
+			if (![obj1 isEqual:obj2])
+				return NO;
+		}
+	}
+	return YES;
+}
+							
++(int)restoreMetadataFromBackupDictIfNeeded:(NSDictionary*)backupContents;
+{
+	if ([backupContents count] == 0)
+		return 0;
+
+	NSString* filePath = [backupContents objectForKey:@"bu_path"];
+	if (![[NSFileManager defaultManager] fileExistsAtPath:filePath])
+	{
+		OSErr theErr;
+		filePath = [self resolveAliasDataToPathFileIDFirst:[backupContents objectForKey:@"bu_alias"] osErr:&theErr];
+		if (![[NSFileManager defaultManager] fileExistsAtPath:filePath])
+			return 0; // could find no file to bu to.
+	}
+	
+	// obtain the current state of affairs on the file by looking at a backup dict from the existing file:
+	NSDictionary* currentData = [OpenMetaBackup openMetaDictForPath:filePath];
+	NSDictionary* omDataFromBackup = [backupContents objectForKey:@"omDict"];
+	
+	if ([currentData count] == 0 && [omDataFromBackup count] == 0)
+		return 0; // no data anywhere
+	
+	if ([self backupDictsTheSame:currentData two:omDataFromBackup])
+		return 0;
+	
+	// there is a difference between what is on the file and the backup stuff passed in.
+	// it could be that the backup stuff is old, etc. So look at that. 
+	int numKeysSet = [self restoreMetadataDict:backupContents toFile:filePath];
+	
+#if KP_DEBUG
+	if (numKeysSet > 0)
+		NSLog(@"meta data repaired on %@ with %@", filePath, backupContents);
+#endif
+	return numKeysSet;
+}
+
 //----------------------------------------------------------------------
 //	restoreMetadataFromBackupFileIfNeeded
 //
@@ -286,29 +405,7 @@ BOOL gOMIsTerminating = NO;
 +(int)restoreMetadataFromBackupFileIfNeeded:(NSString*)inPathToBUFile;
 {
 	NSDictionary* backupContents = [NSDictionary dictionaryWithContentsOfFile:inPathToBUFile];
-	if ([backupContents count] == 0)
-		return 0;
-	
-	NSString* filePath = [backupContents objectForKey:@"bu_path"];
-	if (![[NSFileManager defaultManager] fileExistsAtPath:filePath])
-	{
-		OSErr theErr;
-		filePath = [self resolveAliasDataToPathFileIDFirst:[backupContents objectForKey:@"bu_alias"] osErr:&theErr];
-		if (![[NSFileManager defaultManager] fileExistsAtPath:filePath])
-			return 0; // could find no file to bu to.
-	}
-	
-	// if the file at the path has some sort of tags or ratings applied then that means we are ok. 
-	// I don't do date checks, etc as file may have had tags changed, etc with another computer on a network...
-	if ([self hasTagsOrRatingsSet:filePath])
-		return 0;
-		
-	[self restoreMetadataDict:backupContents toFile:filePath];
-	
-#if KP_DEBUG
-	NSLog(@"meta data repaired on %@ with %@", filePath, backupContents);
-#endif
-	return 1; // one file fixed up
+	return [self restoreMetadataFromBackupDictIfNeeded:backupContents];
 }
 
 
@@ -492,7 +589,7 @@ BOOL gOMIsTerminating = NO;
 //----------------------------------------------------------------------
 //	restoreMetadataDict
 //
-//	Purpose:	
+//	Purpose:	Sep 1, 2009 : only restore open meta data
 //
 //	Inputs:		
 //
@@ -501,23 +598,71 @@ BOOL gOMIsTerminating = NO;
 //  Created by Tom Andersen on 2009/01/28 
 //
 //----------------------------------------------------------------------
-+(void)restoreMetadataDict:(NSDictionary*)buDict toFile:(NSString*)inFile;
++(int)restoreMetadataDict:(NSDictionary*)buDict toFile:(NSString*)inFile;
 {
 	NSDictionary* omDict = [buDict objectForKey:@"omDict"];
+	
+	int numKeysRestored = 0;
 	
 	NSError* error = nil;
 	for (NSString* aKey in [omDict allKeys])
 	{
-		id dataItem = [omDict objectForKey:aKey];
-		if (dataItem)
+		// only restore open meta data:
+		if ([aKey hasPrefix:@"org.openmetainfo:"])
 		{
-			// only set data that is not already set - the idea of a backup is only replace if missing...
-			// TODO - look at the org.openmetainfo.time time stamps and use them.
-			id storedObject = [OpenMeta getXAttr:aKey path:inFile error:&error];
-			if (storedObject == nil)
-				error = [OpenMeta setXAttr:dataItem forKey:aKey path:inFile];
+			id dataInBU = [omDict objectForKey:aKey];
+			if (dataInBU)
+			{
+				// only set data that is not already set - the idea of a backup is only replace if missing...
+				// TODO - look at the org.openmetainfo.time time stamps and use them.
+				
+				// get the dates on the attribute on disk and the attribute in the backup dict:
+				NSString* timeKey = [aKey stringByReplacingOccurrencesOfString:@"org.openmetainfo:" withString:@"org.openmetainfo.time:"];
+				NSDate* dateOnDisk = [OpenMeta getXAttr:timeKey path:inFile error:&error];
+				NSDate* dateInBU = [omDict objectForKey:timeKey];
+				BOOL writeDate = (dateInBU != nil);
+				
+				// to compare dates they both need to be there:
+				if (dateOnDisk == nil)
+					dateOnDisk = [NSDate distantPast];
+				if (dateInBU == nil)
+					dateInBU = [NSDate distantPast];
+				
+				NSString* appleMetaDataKey = [aKey stringByReplacingOccurrencesOfString:@"org.openmetainfo:" withString:@"com.apple.metadata:"];
+				
+				// can't use compare, as that is sub - second, and the dates in the backup files are only accurate to the second.
+				NSTimeInterval dateCompare = [dateInBU timeIntervalSinceDate:dateOnDisk]; // positive values indicate that the dateInBackup is newer than the on disk date.
+				if (fabs(dateCompare) < 2.0)
+				{
+					// the dates are the same. Only set if the data is missing on disk 
+					id objectOnDisk = [OpenMeta getXAttr:aKey path:inFile error:&error];
+					if (objectOnDisk == nil)
+					{
+						numKeysRestored++;
+						[OpenMeta setXAttr:dataInBU forKey:aKey path:inFile];
+						if ([omDict objectForKey:appleMetaDataKey])
+							[OpenMeta setXAttr:dataInBU forKey:appleMetaDataKey path:inFile];
+						
+						// if the backup date is 'real' then write it too:
+						if (writeDate)
+							[OpenMeta setXAttr:dateInBU forKey:timeKey path:inFile];
+					}
+				}
+				else if (dateCompare >= 2.0)
+				{
+					// the backup time is later than the on disk time - the data is old.
+					numKeysRestored++;
+					[OpenMeta setXAttr:dataInBU forKey:aKey path:inFile];
+					if ([omDict objectForKey:appleMetaDataKey])
+						[OpenMeta setXAttr:dataInBU forKey:appleMetaDataKey path:inFile];
+					// if the backup date is 'real' then write it too:
+					if (writeDate)
+						[OpenMeta setXAttr:dateInBU forKey:timeKey path:inFile];
+				}
+			}
 		}
 	}
+	return numKeysRestored;
 }
 
 +(BOOL)modDateOfFile:(NSString*)inBackupPath isAfterCreationDateOf:(NSString*)inFile;
@@ -538,7 +683,8 @@ BOOL gOMIsTerminating = NO;
 //
 //	Inputs:		
 //
-//	Outputs:	
+//	Outputs:	Returns YES if the dictionary looked like it was the right one for the file. 
+//				Does NOT tell you if any restore was actually done.
 //
 //  Created by Tom Andersen on 2009/01/28 
 //
@@ -1027,23 +1173,11 @@ BOOL gOMBackupThreadBusy = NO;
 	return NO;
 }
 
-//----------------------------------------------------------------------
-//	backupMetadataNow
-//
-//	Purpose:	actually backs up the meta data. 
-//
-//	Thread:		should be able to call on any thread. 
-//
-//	Outputs:	
-//
-//  Created by Tom Andersen on 2009/01/28 
-//
-//----------------------------------------------------------------------
-+(void)backupMetadataNow:(NSString*)inPath;
++(NSDictionary*)openMetaDictForPath:(NSString*)inPath;
 {
 	if ([inPath length] == 0)
-		return;
-		
+		return nil;
+	
 	// create dictionary representing all kOM* metadata on the file:
 	NSMutableDictionary* omDictionary = [NSMutableDictionary dictionary];
 	
@@ -1052,7 +1186,7 @@ BOOL gOMBackupThreadBusy = NO;
 	ssize_t bytesNeeded = listxattr([inPath fileSystemRepresentation], nil, 0, XATTR_NOFOLLOW);
 	
 	if (bytesNeeded <= 0)
-		return; // no attrs or no info.
+		return nil; // no attrs or no info.
 	
 	nameBuffer = malloc(bytesNeeded);
 	listxattr([inPath fileSystemRepresentation], nameBuffer, bytesNeeded, XATTR_NOFOLLOW);
@@ -1078,35 +1212,60 @@ BOOL gOMBackupThreadBusy = NO;
 				[omDictionary setObject:objectStored forKey:attrName];
 		}
 	}
+	if (nameBuffer)
+		free(nameBuffer);
+
+	return omDictionary;
+}
+
++(NSDictionary*)backupDictForPath:(NSString*)inPath;
+{
+	NSDictionary* omDictionary = [self openMetaDictForPath:inPath];
+	if ([omDictionary count] == 0)
+		return nil;
 	
+	NSMutableDictionary* outerDictionary = [NSMutableDictionary dictionary];
 	
-	if ([omDictionary count] > 0)
+	[outerDictionary setObject:omDictionary forKey:@"omDict"];
+	
+	// create alias to file, so that we can find it easier:
+	NSData* fileAlias = [[self class] aliasDataForPath:inPath];
+	if (fileAlias)
+		[outerDictionary setObject:fileAlias forKey:@"bu_alias"];
+	
+	// store path - which is in the alias too but not directly accessible
+	if (inPath)
+		[outerDictionary setObject:inPath forKey:@"bu_path"];
+	
+	// store date that we did the backup
+	[outerDictionary setObject:[NSDate date] forKey:@"bu_date"];
+	
+	return outerDictionary;
+}
+
+//----------------------------------------------------------------------
+//	backupMetadataNow
+//
+//	Purpose:	actually backs up the meta data. 
+//
+//	Thread:		should be able to call on any thread. 
+//
+//	Outputs:	
+//
+//  Created by Tom Andersen on 2009/01/28 
+//
+//----------------------------------------------------------------------
++(void)backupMetadataNow:(NSString*)inPath;
+{
+	NSDictionary* backupDict = [self backupDictForPath:inPath];
+	
+	if ([backupDict count] > 0)
 	{
-		NSMutableDictionary* outerDictionary = [NSMutableDictionary dictionary];
-		
-		[outerDictionary setObject:omDictionary forKey:@"omDict"];
-		
-		// create alias to file, so that we can find it easier:
-		NSData* fileAlias = [[self class] aliasDataForPath:inPath];
-		if (fileAlias)
-			[outerDictionary setObject:fileAlias forKey:@"bu_alias"];
-		
-		// store path - which is in the alias too but not directly accessible
-		if (inPath)
-			[outerDictionary setObject:inPath forKey:@"bu_path"];
-		
-		// store date that we did the backup
-		[outerDictionary setObject:[NSDate date] forKey:@"bu_date"];
-		
-		
 		// place to put data: 
 		// filename is 
 		NSString* buItemPath = [self backupPathForItem:inPath];
-		[outerDictionary writeToFile:buItemPath atomically:YES];
+		[backupDict writeToFile:buItemPath atomically:YES];
 	}
-	
-	if (nameBuffer)
-		free(nameBuffer);
 }
 
 #pragma mark alias handling
@@ -1489,6 +1648,168 @@ NSThread* sLiveRepairThread = nil;
 		sLiveRepairThread = nil;
 	}
 
+}
+
+#pragma mark single file support
+
+-(void)singleFileQueueIsBusyError;
+{
+	// we need to inform:
+	NSDictionary* info = [NSDictionary dictionaryWithObject:@"busy" forKey:@"status"];
+	[[NSNotificationCenter defaultCenter] postNotificationName:OpenMetaBackupSingleFileDoneNote object:info];
+}
+@end
+
+@interface OpenMetaBackupOperation (Private)
+
+-(void)writeSingleFile;
+-(void)readSingleFile;
+-(void)doneTheJob;
+
+@end
+
+
+@implementation OpenMetaBackupOperation
+@synthesize singleFile;
+@synthesize	keysToSearch;
+@synthesize	returnDict;
+@synthesize	writeFile;
+
+-(void)main;
+{
+	// we are either to read or write open meta data:
+	
+	if (self.writeFile)
+		[self writeSingleFile];
+	else 
+		[self readSingleFile];
+	
+	// ok report back the news:
+	[self performSelectorOnMainThread:@selector(doneTheJob:) withObject:nil waitUntilDone:NO];
+}
+
+-(void)dealloc;
+{
+	self.singleFile = nil;
+	self.keysToSearch = nil;
+	self.returnDict = nil;
+	[super dealloc];
+}
+
+-(void)doneTheJob:(id)obj;
+{
+	[[NSNotificationCenter defaultCenter] postNotificationName:OpenMetaBackupSingleFileDoneNote object:self.returnDict];
+}
+
+-(void)writeSingleFile;
+{
+	// first we have to search for all the items we can find. 
+	NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+	
+	// create the query
+	if ([self.keysToSearch count] == 0)
+		self.keysToSearch = [NSArray arrayWithObjects:@"kOMManaged", kOMUserTags, (NSString*)kMDItemStarRating, nil];
+	
+	NSString* queryString = @"";
+	for (NSString* aKey in self.keysToSearch)
+	{
+		NSString* thisKeyQuery = [NSString stringWithFormat:@"(%@ == *)", aKey];
+		if ([queryString length] > 0)
+			queryString = [queryString stringByAppendingString:@" || "];
+		queryString = [queryString stringByAppendingString:thisKeyQuery];
+	}
+	
+	MDQueryRef mdQuery = MDQueryCreate(nil, (CFStringRef)queryString, nil, nil);
+	
+	// if something is goofy, we won't get the query back, and all calls involving a mil MDQuery crash. So return:
+	if (mdQuery == nil)
+	{
+		[pool release];
+		self.returnDict = [NSDictionary dictionaryWithObject:@"spotlight failed" forKey:@"status"];
+		return;
+	}
+	
+	// look for these everywhere.
+	CFArrayRef scope = (CFArrayRef)[NSArray arrayWithObjects:(NSString*)kMDQueryScopeComputer, (NSString*)kMDQueryScopeNetwork, nil];
+	MDQuerySetSearchScope(mdQuery, scope, 0);
+	
+	[NSRunLoop currentRunLoop]; // need run loop for mdquery
+	
+	
+	// start it
+	MDQuerySetMaxCount(mdQuery, 500000); // so we don't go completely crazy..
+	BOOL queryRunning = MDQueryExecute(mdQuery, kMDQuerySynchronous); 
+	if (!queryRunning)
+	{
+		CFRelease(mdQuery);
+		[pool release];
+		self.returnDict = [NSDictionary dictionaryWithObject:@"spotlight failed" forKey:@"status"];
+		return;
+	}
+	
+	// ok enumerate through the results:
+	NSInteger numResults = MDQueryGetResultCount(mdQuery);
+
+	NSMutableDictionary* mainDict = [NSMutableDictionary dictionary];
+	
+	NSInteger count;
+	for (count = 0; count < numResults; count++)
+	{
+		NSAutoreleasePool* innerPool = [[NSAutoreleasePool alloc] init];
+		
+		MDItemRef theItem = (MDItemRef) MDQueryGetResultAtIndex(mdQuery, count);
+		
+		CFStringRef path = MDItemCopyAttribute(theItem, kMDItemPath);
+		if (path)
+		{
+			NSDictionary* backupDict = [OpenMetaBackup backupDictForPath:(NSString*)path];
+			if (backupDict)
+				[mainDict setObject:backupDict forKey:(NSString*)path];
+			
+			CFRelease(path);
+		}
+		[innerPool release];
+	}
+	
+	CFRelease(mdQuery);
+	
+	BOOL worked = [mainDict writeToFile:self.singleFile atomically:YES];
+	
+	
+	NSString* statusString = [NSString stringWithFormat:@"%d backups done, file written to %@", numResults, [self.singleFile stringByAbbreviatingWithTildeInPath]];
+	self.returnDict = [NSDictionary dictionaryWithObjectsAndKeys:	statusString, @"status",
+																	[NSNumber numberWithBool:worked], @"worked",
+																	[NSNumber numberWithInt:[mainDict count]], @"dictCount",
+																	nil];
+	
+	[pool release];
+}
+
+-(void)readSingleFile;
+{
+	NSDictionary* mainDict = [NSDictionary dictionaryWithContentsOfFile:self.singleFile];
+	if ([mainDict count] == 0)
+	{
+		self.returnDict = [NSDictionary dictionaryWithObject:@"no restore data found" forKey:@"status"];
+		return;
+	}
+	
+	// ok, loop through all keys
+	NSArray* allKeys = [mainDict allKeys];
+	int numberDone = 0;
+	for (NSString* aPath in allKeys)
+	{
+		NSDictionary* backupDict = [mainDict objectForKey:aPath];
+		numberDone += [OpenMetaBackup restoreMetadataFromBackupDictIfNeeded:backupDict];
+	}
+	
+	
+	NSString* statusString = [NSString stringWithFormat:@"%d restores done", numberDone];
+	self.returnDict = [NSDictionary dictionaryWithObjectsAndKeys:	statusString, @"status",
+					   [NSNumber numberWithBool:YES], @"worked",
+					   [NSNumber numberWithInt:[mainDict count]], @"dictCount",
+					   nil];
+	
 }
 
 

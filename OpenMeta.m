@@ -251,8 +251,7 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 //----------------------------------------------------------------------
 +(NSError*)setString:(NSString*)string keyName:(NSString*)keyName path:(NSString*)path;
 {
-	NSError*	theErr = [self setXAttrMetaData:string metaDataKey:keyName path:path];
-	return theErr;
+	return [self setXAttrMetaData:string metaDataKey:keyName path:path];
 }
 
 +(NSString*)getString:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
@@ -260,73 +259,6 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 	return [self getXAttrMetaData:keyName path:path error:error];
 }
 
-//----------------------------------------------------------------------
-//	setDictionaries
-//
-//	Purpose:	
-//
-//	Inputs:		array of dictionaries. Two attributes will be set. One, a spotlight searchable array 
-//				composed of @"name" fields found in the array, plus the entire array as passed in, which is stored in an 
-//				xattr that will not be indexed by spotlight.
-//				
-//
-//	Outputs:	
-//
-//  Created by Tom Andersen on 2008/07/17 
-//
-//----------------------------------------------------------------------
-+(NSError*)setDictionaries:(NSArray*)arrayOfDicts keyName:(NSString*)keyName path:(NSString*)path;
-{
-	NSMutableArray* spotlightArray = [NSMutableArray array];
-	BOOL needAllDictsSet = NO;
-	for (NSDictionary* aDict in arrayOfDicts)
-	{
-		id name = [aDict objectForKey:@"name"]; // name can be string, nsdate, nsnumber
-		if (name)
-		{
-			[spotlightArray addObject:name];
-			if ([aDict count] > 1)
-				needAllDictsSet = YES;
-		}
-		else
-		{
-			needAllDictsSet = YES;
-		}
-	}
-	
-	// the searchable thing is optional if the spotlightArray is empty this will erase for that key too.
-	// set as array - to set single
-	NSError* theErr = [self setXAttrMetaData:spotlightArray metaDataKey:keyName path:path];
-		
-	// set all the data to the passed key - but only set if there are other keys:
-	if (theErr == nil && needAllDictsSet)
-		theErr = [self setXAttr:arrayOfDicts forKey:keyName path:path];
-	
-	return theErr;
-}
-
-//----------------------------------------------------------------------
-//	getDictionaries
-//
-//	Purpose:	returns dicts as were passed into setDictionaries. 
-//				if you only want the names then you can call getDictionariesNames
-//
-//	Inputs:		
-//
-//	Outputs:	
-//
-//  Created by Tom Andersen on 2008/07/17 
-//
-//----------------------------------------------------------------------
-+(NSArray*)getDictionaries:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
-{
-	return [self getXAttr:keyName path:path error:error];
-}
-
-+(NSArray*)getDictionariesNames:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
-{
-	return [self getXAttrMetaData:keyName path:path error:error];
-}
 
 #pragma mark getting/setting on multiple files 
 
@@ -554,7 +486,11 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 	// and if that fails, to look to the mirror data. But if someone sets a tag using an OpenMeta app.
 	// then removes it with another, possibly old openmeta app, or some other application that uses 
 	// its own method to call setxattr() directly, the mirrored tags will be old and wrong.
-	// So it seems that we would only want to restore from the mirrored tags with a rewrite of how open meta works,
+	// what to do?
+}
++(id)getXAttrMetaDataNoSpotlightMirror:(NSString*)omKey path:(NSString*)path error:(NSError**)error;
+{
+	return [self getXAttr:[self openmetaKey:omKey] path:path error:error];
 }
 
 //----------------------------------------------------------------------
@@ -569,13 +505,20 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 //  Created by Tom Andersen on 2008/12/10 
 //
 //----------------------------------------------------------------------
++(NSError*)setXAttrNoSpotlightMirror:(id)plistObject omKey:(NSString*)omKey path:(NSString*)path;
+{
+	// Mirroring: mirror all data to our own open meta domain name
+	[self setXAttr:plistObject forKey:[self openmetaKey:omKey] path:path];
+	
+	// set a time stamp (not in spotlight DB) for this operation
+	NSError* error = [self setXAttr:[NSDate date] forKey:[self openmetaTimeKey:omKey] path:path];
+	return error;
+}
+
 +(NSError*)setXAttrMetaData:(id)plistObject metaDataKey:(NSString*)metaDataKey path:(NSString*)path;
 {
 	// Mirroring: mirror all data to our own open meta domain name
-	[self setXAttr:plistObject forKey:[self openmetaKey:metaDataKey] path:path];
-	
-	// set a time stamp (not in spotlight DB) for this operation
-	[self setXAttr:[NSDate date] forKey:[self openmetaTimeKey:metaDataKey] path:path];
+	[self setXAttrNoSpotlightMirror:plistObject omKey:metaDataKey path:path];
 	
 	NSError* error = [self setXAttr:plistObject forKey:[self spotlightKey:metaDataKey] path:path];
 	

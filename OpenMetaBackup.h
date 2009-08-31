@@ -66,5 +66,25 @@ but with network volumes or mobile volumes, it may be better to store the backup
 // for OpenMeta.m use
 +(BOOL)attributeKeyMeansBackup:(NSString*)attrName;
 
+// these calls are async and send a notification on main thread when they are done. 
++(void)backupMetadataToSingleFile:(NSArray*)inKeys toFile:(NSString*)toFile;
++(void)restoreMetadataFromSingleFile:(NSString*)inBackupFile;
 
 @end
+
+// class for single file bullk backup
+@interface OpenMetaBackupOperation : NSOperation
+{
+	NSString* singleFile;
+	NSArray* keysToSearch;
+	NSDictionary* returnDict;
+	BOOL writeFile;
+}
+
+@property (retain) NSString*  singleFile;
+@property (retain) NSArray*  keysToSearch;
+@property (retain) NSDictionary*  returnDict;
+@property  BOOL  writeFile;
+
+@end
+
