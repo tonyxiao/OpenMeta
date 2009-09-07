@@ -169,7 +169,7 @@ NSOperationQueue* singleFileOperationQueue = nil;
 //----------------------------------------------------------------------
 +(void)backupMetadataToSingleFile:(NSArray*)keysToSearch toFile:(NSString*)toFile;
 {
-	if ([[self singleFileQueue] operationCount] > 0)
+	if ([[[self singleFileQueue] operations] count] > 0)
 	{
 		[self singleFileQueueIsBusyError];
 		return;
@@ -184,7 +184,7 @@ NSOperationQueue* singleFileOperationQueue = nil;
 
 +(void)restoreMetadataFromSingleFile:(NSString*)inBackupFile;
 {
-	if ([[self singleFileQueue] operationCount] > 0)
+	if ([[[self singleFileQueue] operations] count] > 0)
 	{
 		[self singleFileQueueIsBusyError];
 		return;
