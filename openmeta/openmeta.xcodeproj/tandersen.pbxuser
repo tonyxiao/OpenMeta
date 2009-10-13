@@ -72,19 +72,19 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 265074361;
-			PBXWorkspaceStateSaveDate = 265074361;
+			PBXPerProjectTemplateStateSaveDate = 277144225;
+			PBXWorkspaceStateSaveDate = 277144225;
 		};
 		perUserProjectItems = {
-			6D0615D70FCCC227005327D6 /* PBXTextBookmark */ = 6D0615D70FCCC227005327D6 /* PBXTextBookmark */;
-			6DC608B70FC35C3D00298337 /* PBXTextBookmark */ = 6DC608B70FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608B80FC35C3D00298337 /* PBXTextBookmark */ = 6DC608B80FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608BA0FC35C3D00298337 /* PBXTextBookmark */ = 6DC608BA0FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608BC0FC35C3D00298337 /* PBXTextBookmark */ = 6DC608BC0FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608C00FC35C3D00298337 /* PBXTextBookmark */ = 6DC608C00FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608C10FC35C3D00298337 /* PBXTextBookmark */ = 6DC608C10FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608C30FC35C3D00298337 /* PBXTextBookmark */ = 6DC608C30FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608C50FC35C3D00298337 /* PBXTextBookmark */ = 6DC608C50FC35C3D00298337 /* PBXTextBookmark */;
+			6D0615D70FCCC227005327D6 = 6D0615D70FCCC227005327D6 /* PBXTextBookmark */;
+			6DC608B70FC35C3D00298337 = 6DC608B70FC35C3D00298337 /* PBXTextBookmark */;
+			6DC608B80FC35C3D00298337 = 6DC608B80FC35C3D00298337 /* PBXTextBookmark */;
+			6DC608BA0FC35C3D00298337 = 6DC608BA0FC35C3D00298337 /* PBXTextBookmark */;
+			6DC608BC0FC35C3D00298337 = 6DC608BC0FC35C3D00298337 /* PBXTextBookmark */;
+			6DC608C00FC35C3D00298337 = 6DC608C00FC35C3D00298337 /* PBXTextBookmark */;
+			6DC608C10FC35C3D00298337 = 6DC608C10FC35C3D00298337 /* PBXTextBookmark */;
+			6DC608C30FC35C3D00298337 = 6DC608C30FC35C3D00298337 /* PBXTextBookmark */;
+			6DC608C50FC35C3D00298337 = 6DC608C50FC35C3D00298337 /* PBXTextBookmark */;
 		};
 		sourceControlManager = 6DA077280EF6EF64008B837B /* Source Control */;
 		userBuildSettings = {
@@ -116,6 +116,7 @@
 	};
 	6D0615D80FCCC227005327D6 /* SampleCIView.h */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
 		name = SampleCIView.h;
 		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.h";
 		sourceTree = "<absolute>";
@@ -133,6 +134,9 @@
 		configStateDict = {
 		};
 		customDataFormattersEnabled = 1;
+		dataTipCustomDataFormattersEnabled = 1;
+		dataTipShowTypeColumn = 1;
+		dataTipSortType = 0;
 		debuggerPlugin = GDBDebugging;
 		disassemblyDisplayState = 0;
 		dylibVariantSuffix = "";
@@ -148,6 +152,7 @@
 		name = openmeta;
 		savedGlobals = {
 		};
+		showTypeColumn = 0;
 		sourceDirectories = (
 		);
 		variableFormatDictionary = {
@@ -159,6 +164,9 @@
 		isSCMEnabled = 0;
 		scmConfiguration = {
 			repositoryName = Ironic;
+			repositoryNamesForRoots = {
+				"" = ironic_ironic;
+			};
 		};
 	};
 	6DA077290EF6EF64008B837B /* Code sense */ = {
@@ -167,9 +175,9 @@
 	};
 	6DA0772F0EF6EF74008B837B /* OpenMeta.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1470, 12936}}";
-			sepNavSelRange = "{26657, 0}";
-			sepNavVisRange = "{25964, 2293}";
+			sepNavIntBoundsRect = "{{0, 0}, {1384, 12012}}";
+			sepNavSelRange = "{4263, 3}";
+			sepNavVisRange = "{3082, 1891}";
 		};
 	};
 	6DA077300EF6EF74008B837B /* OpenMeta.h */ = {
@@ -314,11 +322,6 @@
 		name = SampleCIView.h;
 		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.h";
 		sourceTree = "<absolute>";
-		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {903, 540}}";
-			sepNavSelRange = "{192, 0}";
-			sepNavVisRange = "{0, 609}";
-		};
 	};
 	6DDF0C3A0F405DD80025CDBF /* openmeta.1 */ = {
 		uiCtxt = {

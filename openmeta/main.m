@@ -197,7 +197,6 @@ static void SetTags(NSArray* inTags, NSString* inPath)
 	
 	ReportIfError(error);
 }
-
 static NSString* TagsAsString(NSString* inPath)
 {
 	NSString* tagString = @"";
@@ -223,6 +222,21 @@ static NSString* TagsAsString(NSString* inPath)
 	return tagString;
 }
 
+
+static void SetManaged(NSArray* inManagedArg, NSString* inPath)
+{
+	//
+	BOOL setManaged = YES;
+	if ([inManagedArg count] > 0)
+	{
+		if ([[[inManagedArg objectAtIndex:0] lowercaseString] hasPrefix:@"n"])
+			setManaged = NO;
+	}
+	
+	// if they pass in NO, should we strip - by sending in nil, or set to NO? I set to NO.
+	NSError* error = [OpenMeta setXAttrMetaData:[NSNumber numberWithBool:setManaged] metaDataKey:@"kMDItemOMManaged" path:inPath];
+	ReportIfError(error);
+}
 
 static void PrintSingleLine(BOOL inListRating, BOOL inListTags, NSString* inPath)
 {
@@ -278,6 +292,7 @@ int main (int argc, const char * argv[])
 		"example (add tags with spaces): openmeta -a \"three word tag\" \"foo bar\" -p PATH[s]\n"
 		"example (set tags):  openmeta -s foo bar -p PATH[s]\n"
 		"example (clear all tags):  openmeta -s -p PATH[s]\n"
+		"example (set managed):  openmeta -m Y -p PATH[s]\n"
 		"example (set rating 0 - 5 stars):  openmeta -r 3.5 -p PATH[s]\n"
 		"example (print rating):  openmeta -r -p PATH[s]\n"
 		"example (clear rating):  openmeta -r 0.0 -p PATH[s]\n"
@@ -293,6 +308,7 @@ int main (int argc, const char * argv[])
 	NSArray* addTags = nil;
 	NSArray* setTags = nil;
 	NSArray* setRatings = nil;
+	NSArray* setManaged = nil;
 	BOOL printTags = NO;
 	BOOL printInfo = YES;
 	BOOL verbose = YES;
@@ -316,11 +332,13 @@ int main (int argc, const char * argv[])
 			setTags = ReadParameters(theArgs, &argCount, YES);
 		else if ([anArg isEqualToString:@"-r"])
 			setRatings = ReadParameters(theArgs, &argCount, YES);
+		else if ([anArg isEqualToString:@"-m"])
+			setManaged = ReadParameters(theArgs, &argCount, YES);
 		else if ([anArg isEqualToString:@"-v"])
 			verbose = NO;
 	}
 	
-	if (addTags || setTags || setRatings || printTags)
+	if (addTags || setTags || setRatings || printTags || setManaged)
 		printInfo = NO;
 	
 	if (!verbose)
@@ -350,6 +368,9 @@ int main (int argc, const char * argv[])
 		
 		if (setTags)
 			SetTags(setTags, aPath);
+		
+		if (setManaged)
+			SetManaged(setManaged, aPath);
 		
 		if (verbose)
 			PrintSingleLine(ratingsCommandFound, (addTags || setTags || printTags), aPath);
