@@ -33,7 +33,7 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					952,
+					713,
 					20,
 					48,
 					43,
@@ -55,7 +55,7 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					709,
+					673,
 					60,
 					20,
 					48,
@@ -72,15 +72,15 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 264430842;
-			PBXWorkspaceStateSaveDate = 264430842;
+			PBXPerProjectTemplateStateSaveDate = 265074361;
+			PBXWorkspaceStateSaveDate = 265074361;
 		};
 		perUserProjectItems = {
+			6D0615D70FCCC227005327D6 /* PBXTextBookmark */ = 6D0615D70FCCC227005327D6 /* PBXTextBookmark */;
 			6DC608B70FC35C3D00298337 /* PBXTextBookmark */ = 6DC608B70FC35C3D00298337 /* PBXTextBookmark */;
 			6DC608B80FC35C3D00298337 /* PBXTextBookmark */ = 6DC608B80FC35C3D00298337 /* PBXTextBookmark */;
 			6DC608BA0FC35C3D00298337 /* PBXTextBookmark */ = 6DC608BA0FC35C3D00298337 /* PBXTextBookmark */;
 			6DC608BC0FC35C3D00298337 /* PBXTextBookmark */ = 6DC608BC0FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608BE0FC35C3D00298337 /* PBXTextBookmark */ = 6DC608BE0FC35C3D00298337 /* PBXTextBookmark */;
 			6DC608C00FC35C3D00298337 /* PBXTextBookmark */ = 6DC608C00FC35C3D00298337 /* PBXTextBookmark */;
 			6DC608C10FC35C3D00298337 /* PBXTextBookmark */ = 6DC608C10FC35C3D00298337 /* PBXTextBookmark */;
 			6DC608C30FC35C3D00298337 /* PBXTextBookmark */ = 6DC608C30FC35C3D00298337 /* PBXTextBookmark */;
@@ -103,6 +103,22 @@
 			sepNavSelRange = "{147, 0}";
 			sepNavVisRange = "{0, 158}";
 		};
+	};
+	6D0615D70FCCC227005327D6 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 6D0615D80FCCC227005327D6 /* SampleCIView.h */;
+		name = "SampleCIView.h: 9";
+		rLen = 0;
+		rLoc = 192;
+		rType = 0;
+		vrLen = 609;
+		vrLoc = 0;
+	};
+	6D0615D80FCCC227005327D6 /* SampleCIView.h */ = {
+		isa = PBXFileReference;
+		name = SampleCIView.h;
+		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.h";
+		sourceTree = "<absolute>";
 	};
 	6DA0771C0EF6EF46008B837B /* openmeta */ = {
 		isa = PBXExecutable;
@@ -199,14 +215,10 @@
 	};
 	6DC608B90FC35C3D00298337 /* Authorization.h */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
 		name = Authorization.h;
 		path = /Developer/SDKs/MacOSX10.5.sdk/System/Library/Frameworks/Security.framework/Versions/A/Headers/Authorization.h;
 		sourceTree = "<absolute>";
-		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1650, 6076}}";
-			sepNavSelRange = "{4347, 36}";
-			sepNavVisRange = "{2403, 2428}";
-		};
 	};
 	6DC608BA0FC35C3D00298337 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -220,6 +232,7 @@
 	};
 	6DC608BB0FC35C3D00298337 /* errno.h */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
 		name = errno.h;
 		path = /Developer/SDKs/MacOSX10.5.sdk/usr/include/sys/errno.h;
 		sourceTree = "<absolute>";
@@ -236,28 +249,10 @@
 	};
 	6DC608BD0FC35C3D00298337 /* SampleCIView.m */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.objc;
 		name = SampleCIView.m;
 		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.m";
 		sourceTree = "<absolute>";
-	};
-	6DC608BE0FC35C3D00298337 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 6DC608BF0FC35C3D00298337 /* SampleCIView.h */;
-		rLen = 0;
-		rLoc = 2147483647;
-		rType = 0;
-	};
-	6DC608BF0FC35C3D00298337 /* SampleCIView.h */ = {
-		isa = PBXFileReference;
-		lastKnownFileType = sourcecode.c.h;
-		name = SampleCIView.h;
-		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.h";
-		sourceTree = "<absolute>";
-		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1142, 765}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRange = "{0, 609}";
-		};
 	};
 	6DC608C00FC35C3D00298337 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -281,6 +276,7 @@
 	};
 	6DC608C20FC35C3D00298337 /* errno.h */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
 		name = errno.h;
 		path = /Developer/SDKs/MacOSX10.5.sdk/usr/include/sys/errno.h;
 		sourceTree = "<absolute>";
@@ -297,6 +293,7 @@
 	};
 	6DC608C40FC35C3D00298337 /* SampleCIView.m */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.objc;
 		name = SampleCIView.m;
 		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.m";
 		sourceTree = "<absolute>";
@@ -313,9 +310,15 @@
 	};
 	6DC608C60FC35C3D00298337 /* SampleCIView.h */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
 		name = SampleCIView.h;
 		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.h";
 		sourceTree = "<absolute>";
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {903, 540}}";
+			sepNavSelRange = "{192, 0}";
+			sepNavVisRange = "{0, 609}";
+		};
 	};
 	6DDF0C3A0F405DD80025CDBF /* openmeta.1 */ = {
 		uiCtxt = {

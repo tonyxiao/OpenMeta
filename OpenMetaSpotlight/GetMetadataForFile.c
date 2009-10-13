@@ -64,9 +64,9 @@ Boolean GetMetadataForFile(void* thisInterface,
 	// open meta schema file, and generate entries in the user interface and file system where appropriate.
 	
 	// The end result is that we allow users to search for "tag:foobar" in the spotlight top right (leopard - snow leopard) 
-	// spotlight search area, and only search for files with a kOMUserTags of foobar.
+	// spotlight search area, and only search for files with a kMDItemOMUserTags of foobar.
 	
-	// The file should be a dictionary: Each key in the file will be a kOM*, and will have a value that is a representative 
+	// The file should be a dictionary: Each key in the file will be a kMDItemOM*, and will have a value that is a representative 
 	// value (eg array of strings, or cfnumber, etc)
 	CFDictionaryRef fileDict = NULL;
 	
