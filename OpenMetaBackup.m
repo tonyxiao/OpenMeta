@@ -9,15 +9,16 @@
 #include <sys/xattr.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/unistd.h>
 
 #import "OpenMeta.h"
 #import "OpenMetaBackup.h"
 
 NSString* OpenMetaBackupSingleFileDoneNote = @"OpenMetaBackupSingleFileDoneNote";
 
-NSString* kBackupPath = @"~/Library/Application Support/OpenMeta/backups"; // i guess this should be some messy cocoa special folder lookup for application support
+NSString* kBackupPath = @"~/Library/Application Support/OpenMeta/backups.noindex"; // i guess this should be some messy cocoa special folder lookup for application support
 
-BOOL gDoOpenMetaBackups = YES; // mechanism for shutting down backups - place txt file at ~/Library/Application Support/OpenMeta/backups/No Backups Please.txt"
+BOOL gDoOpenMetaBackups = YES; // mechanism for shutting down backups - place txt file at ~/Library/Application Support/OpenMeta/backups.noindex/No Backups Please.txt"
 
 @interface OpenMetaBackup (Private)
 +(NSString*)fsRefToPath:(FSRef*)inRef;
@@ -255,11 +256,20 @@ NSOperationQueue* singleFileOperationQueue = nil;
 //----------------------------------------------------------------------
 +(NSString*) backupPathForMonthsBeforeNow:(int)inMonthsBeforeNow;
 {
-//+    NSString *libraryDir = [NSSearchPathForDirectoriesInDomains( NSApplicationSupportDirectory,
-//                                                                  NSUserDomainMask,
-//                                                                  YES ) objectAtIndex:0];
 	NSString* backupPath = [kBackupPath stringByExpandingTildeInPath];
-	
+
+	// I changed the backup path to have .noindex on it, to prevent indexing by spotlight.
+	// In order to support older OpenMeta apps out there, I create a sym link that points from the old path to the new one.
+	if (![[NSFileManager defaultManager] fileExistsAtPath:backupPath])
+	{
+		NSString* oldBackupPath = [@"~/Library/Application Support/OpenMeta/backups" stringByExpandingTildeInPath];
+		if ([[NSFileManager defaultManager] fileExistsAtPath:oldBackupPath])
+			rename([oldBackupPath fileSystemRepresentation], [backupPath fileSystemRepresentation]); // the old one was there, so rename it to the new .noindex name
+		else 
+			[[NSFileManager defaultManager] createDirectoryAtPath:backupPath withIntermediateDirectories:YES attributes:nil error:nil]; // create it - this is likely a first run
+		symlink([backupPath fileSystemRepresentation], [oldBackupPath fileSystemRepresentation]); // create a link called backup that points to backup.noindex
+	}
+			
 	NSCalendarDate* todaysDate = [NSCalendarDate calendarDate];
 	
 	int theYear = [todaysDate yearOfCommonEra];
@@ -849,12 +859,6 @@ BOOL gOMIsTerminating = NO;
 	// if the path is right, then look at restoring and returning:
 	if ([inPath isEqualToString:[backupContents objectForKey:@"bu_path"]])
 	{
-		// the path is the same as the backup path. 
-		// we can still trip over the 'Picture 1" scenario - Picture 1 lands on the desktop and is promptly tagged
-		// then renamed and moved. So the tags are on the moved file.
-		// when the next screenshot comes down the pipe, the alias will point to the moved file, which is what we want
-		// but if the alias does not work, then we know that the original is nowhere to be found, so we can add tags to this file.
-		
 		// Another tweak: Applications, and perhaps other file types like to use path based tags - when you update an application, 
 		// you want the tags to be reapplied. 
 		if ([[inPath pathExtension] isEqualToString:@"app"])
@@ -865,18 +869,17 @@ BOOL gOMIsTerminating = NO;
 			return YES;
 		}
 		
+		// the path is the same as the backup path. 
+		// we can still trip over the 'Picture 1" scenario - Picture 1 lands on the desktop and is promptly tagged
+		// then renamed and moved. So the tags are on the moved file.
+		// when the next screenshot comes down the pipe, the alias will point to the moved file, which is what we want
+		// but if the alias does not work, then we know that the original is nowhere to be found, so we can add tags to this file.
 		if ([aliasPath length] == 0 || [inPath isEqualToString:aliasPath])
 		{
-			// only restore if the backup file modification date is OLDER than the creation date of the file -
-			// the backup had to have been done after the file was created!
-			if ([self modDateOfFile:inPathToBUFile isAfterCreationDateOf:inPath])
-			{
-				if (inDelay > 0.0)
-					[NSThread sleepForTimeInterval:inDelay];
-				[self restoreMetadataDict:backupContents toFile:inPath];
-				return YES;
-			}
-			return NO;
+			if (inDelay > 0.0)
+				[NSThread sleepForTimeInterval:inDelay];
+			[self restoreMetadataDict:backupContents toFile:inPath];
+			return YES;
 		}
 	}
 	
@@ -1320,6 +1323,18 @@ BOOL gOMBackupThreadBusy = NO;
 		gOMBackupThreadBusy = NO;
 	}
 }
+
+// you can backup the open meta data about any file by calline [OpenmetaBackup backupMetadata:path].
+// only when you set tags are backup files automatically created.
+
++(BOOL)attributeKeyMeansAutomaticBackup:(NSString*)attrName;
+{
+	if ([attrName rangeOfString:kMDItemOMUserTags options:NSLiteralSearch].location != NSNotFound)
+		return YES;
+		
+	return NO;
+}
+
 
 +(BOOL)attributeKeyMeansBackup:(NSString*)attrName;
 {
@@ -2002,6 +2017,8 @@ NSThread* sLiveRepairThread = nil;
 				[OpenMeta setXAttr:oldFormatTags forKey:infoNewKey path:(NSString*)path];
 				[OpenMeta setXAttr:oldFormatTags forKey:metaNewKey path:(NSString*)path];
 				[OpenMeta setXAttr:[NSDate date] forKey:timeNewKey path:(NSString*)path];
+				// when doing imports of lots of files, we don't want to overload Spotlight mdimport - we want it to keep up.
+				[NSThread sleepForTimeInterval:0.06];
 			}
 		}
 		CFRelease(path);
@@ -2047,17 +2064,21 @@ NSThread* sLiveRepairThread = nil;
 
 - (void)updatedUpradeQuery:(NSNotification *)queryNotification;
 {
+	// I have a bug - serious it seems where this gets in a loop:
+	// so we 'only' do 100 calls through here, maximum.
+	static int counter = 0;
+	if (counter++ > 100)
+		return;
+	
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	
 	NSDictionary* updatedInfo = [queryNotification userInfo];
 	NSArray* addedItems = [updatedInfo objectForKey:@"kMDQueryUpdateAddedItems"];
-	NSArray* changedItems = [updatedInfo objectForKey:@"kMDQueryUpdateChangedItems"];
+	// don't worry about changed items in the search, as they could be the cause of this loop I am seeing.
+	//NSArray* changedItems = [updatedInfo objectForKey:@"kMDQueryUpdateChangedItems"];
 	
-	// check all changed and added
+	// check only items added
 	for (id mdRef in addedItems)
-		[self upgradeTagsOnItem:(MDItemRef)mdRef];
-
-	for (id mdRef in changedItems)
 		[self upgradeTagsOnItem:(MDItemRef)mdRef];
 
 	[pool release];

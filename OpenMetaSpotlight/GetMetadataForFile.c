@@ -102,7 +102,7 @@ Boolean GetMetadataForFile(void* thisInterface,
 		return FALSE;
 	}
 	
-	CFShow(fileDict);
+	//CFShow(fileDict);
 	
 	CFDictionaryGetKeysAndValues(fileDict, (const void**) keys, (const void**) values);
 	long count;

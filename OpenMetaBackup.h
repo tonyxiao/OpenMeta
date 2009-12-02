@@ -20,7 +20,7 @@ So OpenMeta makes a backup file for every edit to xattrs when using the API.
 The exact details may change in the future, the idea though is that when we go to retrieve tags for a file, if we find no tags, we check to see if there is a 
 backup file we can restore from. If no backup file, then there really are no tags on the file. 
 
-The backups are stored in the home folder of the person who made the change to the file, in ~/Library/OpenMeta/backup. This works well for most usage scenarios, 
+The backups are stored in the home folder of the person who made the change to the file, in ~/Library/OpenMeta/backups.noindex. This works well for most usage scenarios, 
 but with network volumes or mobile volumes, it may be better to store the backups in a predetermined place on the volume.
 
 */
@@ -66,7 +66,7 @@ but with network volumes or mobile volumes, it may be better to store the backup
 +(void)appIsTerminating;
 
 // for OpenMeta.m use
-+(BOOL)attributeKeyMeansBackup:(NSString*)attrName;
++(BOOL)attributeKeyMeansAutomaticBackup:(NSString*)attrName;
 +(void)copyTagsFromOldKeyTokMDItemOMIfNeeded:(NSString*)inPath;
 
 // these calls are async and send a notification on main thread when they are done. 

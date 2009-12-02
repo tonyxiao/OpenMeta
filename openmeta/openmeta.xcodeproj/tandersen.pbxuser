@@ -33,7 +33,7 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					713,
+					781,
 					20,
 					48,
 					43,
@@ -76,15 +76,10 @@
 			PBXWorkspaceStateSaveDate = 277144225;
 		};
 		perUserProjectItems = {
-			6D0615D70FCCC227005327D6 = 6D0615D70FCCC227005327D6 /* PBXTextBookmark */;
-			6DC608B70FC35C3D00298337 = 6DC608B70FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608B80FC35C3D00298337 = 6DC608B80FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608BA0FC35C3D00298337 = 6DC608BA0FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608BC0FC35C3D00298337 = 6DC608BC0FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608C00FC35C3D00298337 = 6DC608C00FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608C10FC35C3D00298337 = 6DC608C10FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608C30FC35C3D00298337 = 6DC608C30FC35C3D00298337 /* PBXTextBookmark */;
-			6DC608C50FC35C3D00298337 = 6DC608C50FC35C3D00298337 /* PBXTextBookmark */;
+			6D7334F21084E95E00FABF4D /* PBXTextBookmark */ = 6D7334F21084E95E00FABF4D /* PBXTextBookmark */;
+			6D7334F31084E95E00FABF4D /* PBXTextBookmark */ = 6D7334F31084E95E00FABF4D /* PBXTextBookmark */;
+			6DC608B80FC35C3D00298337 /* PBXTextBookmark */ = 6DC608B80FC35C3D00298337 /* PBXTextBookmark */;
+			6DC608BA0FC35C3D00298337 /* PBXTextBookmark */ = 6DC608BA0FC35C3D00298337 /* PBXTextBookmark */;
 		};
 		sourceControlManager = 6DA077280EF6EF64008B837B /* Source Control */;
 		userBuildSettings = {
@@ -92,9 +87,9 @@
 	};
 	08FB7796FE84155DC02AAC07 /* main.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {939, 4340}}";
-			sepNavSelRange = "{3909, 11}";
-			sepNavVisRange = "{0, 3568}";
+			sepNavIntBoundsRect = "{{0, 0}, {971, 5473}}";
+			sepNavSelRange = "{11793, 0}";
+			sepNavVisRange = "{10765, 1400}";
 		};
 	};
 	32A70AAB03705E1F00C91783 /* openmeta_Prefix.pch */ = {
@@ -104,22 +99,25 @@
 			sepNavVisRange = "{0, 158}";
 		};
 	};
-	6D0615D70FCCC227005327D6 /* PBXTextBookmark */ = {
+	6D7334F21084E95E00FABF4D /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = 6D0615D80FCCC227005327D6 /* SampleCIView.h */;
-		name = "SampleCIView.h: 9";
-		rLen = 0;
-		rLoc = 192;
+		fRef = 08FB7796FE84155DC02AAC07 /* main.m */;
+		name = "main.m: 66";
+		rLen = 11;
+		rLoc = 3909;
 		rType = 0;
-		vrLen = 609;
-		vrLoc = 0;
+		vrLen = 3032;
+		vrLoc = 536;
 	};
-	6D0615D80FCCC227005327D6 /* SampleCIView.h */ = {
-		isa = PBXFileReference;
-		lastKnownFileType = sourcecode.c.h;
-		name = SampleCIView.h;
-		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.h";
-		sourceTree = "<absolute>";
+	6D7334F31084E95E00FABF4D /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 08FB7796FE84155DC02AAC07 /* main.m */;
+		name = "main.m: 352";
+		rLen = 0;
+		rLoc = 11793;
+		rType = 0;
+		vrLen = 1400;
+		vrLoc = 10765;
 	};
 	6DA0771C0EF6EF46008B837B /* openmeta */ = {
 		isa = PBXExecutable;
@@ -175,9 +173,9 @@
 	};
 	6DA0772F0EF6EF74008B837B /* OpenMeta.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1384, 12012}}";
-			sepNavSelRange = "{4263, 3}";
-			sepNavVisRange = "{3082, 1891}";
+			sepNavIntBoundsRect = "{{0, 0}, {1132, 12259}}";
+			sepNavSelRange = "{20640, 16}";
+			sepNavVisRange = "{19842, 1962}";
 		};
 	};
 	6DA077300EF6EF74008B837B /* OpenMeta.h */ = {
@@ -196,20 +194,10 @@
 	};
 	6DC082D10F30CED400CF899F /* OpenMetaBackup.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1548, 20790}}";
-			sepNavSelRange = "{15579, 251}";
-			sepNavVisRange = "{14846, 1385}";
+			sepNavIntBoundsRect = "{{0, 0}, {1153, 27924}}";
+			sepNavSelRange = "{20567, 3}";
+			sepNavVisRange = "{19780, 1276}";
 		};
-	};
-	6DC608B70FC35C3D00298337 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 08FB7796FE84155DC02AAC07 /* main.m */;
-		name = "main.m: 66";
-		rLen = 11;
-		rLoc = 3909;
-		rType = 0;
-		vrLen = 3568;
-		vrLoc = 0;
 	};
 	6DC608B80FC35C3D00298337 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -243,84 +231,6 @@
 		lastKnownFileType = sourcecode.c.h;
 		name = errno.h;
 		path = /Developer/SDKs/MacOSX10.5.sdk/usr/include/sys/errno.h;
-		sourceTree = "<absolute>";
-	};
-	6DC608BC0FC35C3D00298337 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 6DC608BD0FC35C3D00298337 /* SampleCIView.m */;
-		name = "SampleCIView.m: 9";
-		rLen = 0;
-		rLoc = 163;
-		rType = 0;
-		vrLen = 1076;
-		vrLoc = 0;
-	};
-	6DC608BD0FC35C3D00298337 /* SampleCIView.m */ = {
-		isa = PBXFileReference;
-		lastKnownFileType = sourcecode.c.objc;
-		name = SampleCIView.m;
-		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.m";
-		sourceTree = "<absolute>";
-	};
-	6DC608C00FC35C3D00298337 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 08FB7796FE84155DC02AAC07 /* main.m */;
-		name = "main.m: 66";
-		rLen = 11;
-		rLoc = 3909;
-		rType = 0;
-		vrLen = 3568;
-		vrLoc = 0;
-	};
-	6DC608C10FC35C3D00298337 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 6DC608C20FC35C3D00298337 /* errno.h */;
-		name = "errno.h: 103";
-		rLen = 0;
-		rLoc = 4703;
-		rType = 0;
-		vrLen = 2527;
-		vrLoc = 1339;
-	};
-	6DC608C20FC35C3D00298337 /* errno.h */ = {
-		isa = PBXFileReference;
-		lastKnownFileType = sourcecode.c.h;
-		name = errno.h;
-		path = /Developer/SDKs/MacOSX10.5.sdk/usr/include/sys/errno.h;
-		sourceTree = "<absolute>";
-	};
-	6DC608C30FC35C3D00298337 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 6DC608C40FC35C3D00298337 /* SampleCIView.m */;
-		name = "SampleCIView.m: 9";
-		rLen = 0;
-		rLoc = 163;
-		rType = 0;
-		vrLen = 1076;
-		vrLoc = 0;
-	};
-	6DC608C40FC35C3D00298337 /* SampleCIView.m */ = {
-		isa = PBXFileReference;
-		lastKnownFileType = sourcecode.c.objc;
-		name = SampleCIView.m;
-		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.m";
-		sourceTree = "<absolute>";
-	};
-	6DC608C50FC35C3D00298337 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 6DC608C60FC35C3D00298337 /* SampleCIView.h */;
-		name = "SampleCIView.h: 1";
-		rLen = 0;
-		rLoc = 0;
-		rType = 0;
-		vrLen = 609;
-		vrLoc = 0;
-	};
-	6DC608C60FC35C3D00298337 /* SampleCIView.h */ = {
-		isa = PBXFileReference;
-		lastKnownFileType = sourcecode.c.h;
-		name = SampleCIView.h;
-		path = "/Developer/Examples/Quartz/Core Image/CIMicroPaint/SampleCIView.h";
 		sourceTree = "<absolute>";
 	};
 	6DDF0C3A0F405DD80025CDBF /* openmeta.1 */ = {

@@ -542,20 +542,10 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 }
 
 #pragma mark registering openmeta attributes
-+(void)checkForRegisterDone:(NSTimer*)inTimer;
++(void)removeSchemaFile:(NSString*)path;
 {
-	NSTask* theTask = [inTimer userInfo];
-	if (![theTask isRunning])
-	{
-		
-		// delete the file - spotlight has seen what we wanted it to see...
-		if ([[theTask arguments] count] > 0)
-		{
-			NSString* filePath = [[theTask arguments] objectAtIndex:0];
-			[[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
-		}
-		[inTimer invalidate];
-	}
+	if ([path rangeOfString:@"Library/Application Support/OpenMeta/schemaregister"].location != NSNotFound) // make sure some error does not see us erasing lots of stuff 
+		[[NSFileManager defaultManager] removeItemAtPath:path error:nil];
 }
 
 //----------------------------------------------------------------------
@@ -610,7 +600,7 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 //				Then register the types:
 //				[OpenMeta registerOMAttributes:myAttributeDict forAppName:@"myCoolApp"];
 //
-//				Doing all of this is necc to get searches like 'rated:>4' working in spotlight, and for the item 'Rated' to show up 
+//				Doing all of this is necc to get searches like 'starrating:>4' working in spotlight, and for the item 'Rated' to show up 
 //				in the Finder (and other apps) when you do a Find and then look under the little 'Other' menu. 
 //
 //				All this routine does is make a file that the importer will import, then let mdimport go at it, then remove the file. 
@@ -634,20 +624,8 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 	
 	[typicalAttributes writeToFile:path atomically:YES];
 	
-	// get mdimport to run the file - it should do this automatically, but give it a bit 
-	NSTask* importTask = [[[NSTask alloc] init] autorelease];
-	[importTask setLaunchPath:@"/usr/bin/mdimport"];
-	NSArray* args = [NSArray arrayWithObject:path];
-	[importTask setArguments:args];
-	
-	// we want to supress output to anywhere. 
-	[importTask setStandardOutput:[NSPipe pipe]];
-	[importTask setStandardError:[NSPipe pipe]];
-	
-	[importTask launch];
-	
-	// check until it finds that the file is imported.
-	[NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(checkForRegisterDone:) userInfo:importTask repeats:YES];
+	// simpler - just leave mdimport a few seconds to get to the file. 
+	[self performSelector:@selector(removeSchemaFile:) withObject:path afterDelay:2.0];
 }
 
 #pragma mark private 
@@ -779,7 +757,7 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 	// only backup kMDItemOM - open meta stuff. 
 	if (returnVal == 0)
 	{
-		if ([OpenMetaBackup attributeKeyMeansBackup:inKeyName])
+		if ([OpenMetaBackup attributeKeyMeansAutomaticBackup:inKeyName])
 			[OpenMetaBackup backupMetadata:path]; // backup all meta data changes. 
 		return nil;
 	}
@@ -792,7 +770,7 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 		NSError* errorOnAuthenticatedAttempt = [self authenticatedSetXAttr:plistObject forKey:inKeyName path:path];
 		if (errorOnAuthenticatedAttempt == nil)
 		{
-			if ([OpenMetaBackup attributeKeyMeansBackup:inKeyName])
+			if ([OpenMetaBackup attributeKeyMeansAutomaticBackup:inKeyName])
 				[OpenMetaBackup backupMetadata:path]; // backup all meta data changes. 
 			
 			return nil; // success after authenticating

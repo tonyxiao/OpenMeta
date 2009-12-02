@@ -94,8 +94,9 @@ OTHER DEALINGS IN THE SOFTWARE.
     Note on Backup.
 	
 	Whenever you set an item with kMDItemOM* as the key, openmeta will make sure that there is a backup made of the tags, etc, that 
-	you have set on the file. The backups go into the folder ~/Library/Application Support/OpenMeta/backups/2009 etc. The backups are
+	you have set on the file. The backups go into the folder ~/Library/Application Support/OpenMeta/backups.noindex/2009 etc. The backups are
 	one file per item, and are on a month by month basis. This may be all the backup you need, as time machine will back these up.
+	The .noindex suffix on the backup folder stops Spotlight from indexing the files.
 	
     Note on Backup - "Time Machine", etc.
     When you set an xattr on a file, the modification date on the file is NOT changed, 
