@@ -260,7 +260,7 @@ NSOperationQueue* singleFileOperationQueue = nil;
 
 	// I changed the backup path to have .noindex on it, to prevent indexing by spotlight.
 	// In order to support older OpenMeta apps out there, I create a sym link that points from the old path to the new one.
-	if (![[NSFileManager defaultManager] fileExistsAtPath:backupPath])
+	if (gDoOpenMetaBackups && ![[NSFileManager defaultManager] fileExistsAtPath:backupPath])
 	{
 		NSString* oldBackupPath = [@"~/Library/Application Support/OpenMeta/backups" stringByExpandingTildeInPath];
 		if ([[NSFileManager defaultManager] fileExistsAtPath:oldBackupPath])
@@ -304,7 +304,7 @@ NSOperationQueue* singleFileOperationQueue = nil;
 +(NSString*) currentBackupPath;
 {
 	NSString* bupath = [self backupPathForMonthsBeforeNow:0];
-	if (![[NSFileManager defaultManager] fileExistsAtPath:bupath])
+	if (gDoOpenMetaBackups && ![[NSFileManager defaultManager] fileExistsAtPath:bupath])
 		[[NSFileManager defaultManager] createDirectoryAtPath:bupath withIntermediateDirectories:YES attributes:nil error:nil];
 	
 	return bupath;
