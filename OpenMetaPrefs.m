@@ -8,6 +8,8 @@
 
 #import "OpenMetaPrefs.h"
 
+NSString* gPrefsFileName = @"com.openmeta.shared";
+
 @interface OpenMetaPrefs (Private)
 +(void)synchPrefsIfItsBeenAWhile;
 @end
@@ -15,6 +17,12 @@
 
 @implementation OpenMetaPrefs
 #pragma mark global prefs for recent tags 
+
+// Call without extension - ie don't add plist
++(void)setPrefsFile:(NSString*)prefsFileToUse;
+{
+	gPrefsFileName = [prefsFileToUse copy];
+}
 
 //----------------------------------------------------------------------
 //	recentTags
@@ -33,7 +41,7 @@
 {
 	[self synchPrefsIfItsBeenAWhile]; // can't really  call sync for each call into here, as some apps will call really really often. And the sync call goes out to the file system
 	NSArray* outArray = [NSArray array];
-	CFPropertyListRef prefArray = CFPreferencesCopyAppValue(CFSTR("recentlyEnteredTags"), CFSTR("com.openmeta.shared"));
+	CFPropertyListRef prefArray = CFPreferencesCopyAppValue(CFSTR("recentlyEnteredTags"), (CFStringRef)gPrefsFileName);
 	if (prefArray)
 	{
 		outArray = [NSArray arrayWithArray:(NSArray*)prefArray];
@@ -76,7 +84,7 @@
 	// by using CFPreferences, we can use a global shared pool of recently entered tags.
 	[self synchPrefs];
 	NSMutableArray* currentRecents = [NSMutableArray array];
-	CFPropertyListRef prefArray = CFPreferencesCopyAppValue(CFSTR("recentlyEnteredTags"), CFSTR("com.openmeta.shared"));
+	CFPropertyListRef prefArray = CFPreferencesCopyAppValue(CFSTR("recentlyEnteredTags"), (CFStringRef)gPrefsFileName);
 	if (prefArray)
 	{
 		[currentRecents addObjectsFromArray:(NSArray*)prefArray];
@@ -119,7 +127,7 @@
 			break;
 	}
 
-	CFPreferencesSetAppValue(CFSTR("recentlyEnteredTags"), (CFPropertyListRef) newRecents, CFSTR("com.openmeta.shared"));
+	CFPreferencesSetAppValue(CFSTR("recentlyEnteredTags"), (CFPropertyListRef) newRecents, (CFStringRef)gPrefsFileName);
 	[self synchPrefs];
 }
 
@@ -137,7 +145,7 @@
 //----------------------------------------------------------------------
 +(void)synchPrefs;
 {
-	CFPreferencesAppSynchronize(CFSTR("com.openmeta.shared"));
+	CFPreferencesAppSynchronize((CFStringRef)gPrefsFileName);
 }
 
 +(void)synchPrefsIfItsBeenAWhile;

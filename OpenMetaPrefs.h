@@ -23,4 +23,7 @@
 // note that it is automatically called every few seconds when you call recentTags, so you likely don't need to call this.
 + (void)synchPrefs;	
 
+// for app store, etc - you can set the prefs to use your own app only.. DONT call with .plist on the prefs file name..
++(void)setPrefsFile:(NSString*)prefsFileToUse;
+
 @end
