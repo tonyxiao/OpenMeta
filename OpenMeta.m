@@ -84,6 +84,7 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 //----------------------------------------------------------------------
 +(NSError*)setUserTags:(NSArray*)tags path:(NSString*)path;
 {
+    tags = tags ?: [NSArray array];
 	if (![self validateAsArrayOfStrings:tags])
 		return [NSError errorWithDomain:@"openmeta" code:OM_ParamError userInfo:[NSDictionary dictionaryWithObject:OM_ParamErrorString forKey:@"info"]];
 	
@@ -268,6 +269,46 @@ NSString* const OM_MetaTooBigErrorString = @"Meta data is too big - size as bina
 +(NSString*)getString:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
 {
 	return [self getXAttrMetaData:keyName path:path error:error];
+}
+
++(NSError*)setNumber:(NSNumber*)number keyName:(NSString *)keyName path:(NSString *)path
+{
+    return [self setXAttrMetaData:number metaDataKey:keyName path:path];
+}
+
++(NSNumber *)getNumber:(NSString*)keyName path:(NSString*)path error:(NSError**)error
+{
+    return [self getXAttrMetaData:keyName path:path error:error];
+}
+
++(NSError*)setBoolValue:(BOOL)boolValue keyName:(NSString *)keyName path:(NSString *)path
+{
+    return [self setXAttrMetaData:[NSNumber numberWithBool:boolValue] metaDataKey:keyName path:path];
+}
+
++(BOOL)getBoolValue:(NSString*)keyName path:(NSString*)path error:(NSError**)error
+{
+    return [[self getXAttrMetaData:keyName path:path error:error] boolValue];
+}
+
++(NSError*)setDate:(NSDate *)date keyName:(NSString *)keyName path:(NSString *)path
+{
+    return [self setXAttrMetaData:date metaDataKey:keyName path:path];
+}
+
++(NSDate *)getDate:(NSString*)keyName path:(NSString*)path error:(NSError**)error
+{
+    return [self getXAttrMetaData:keyName path:path error:error];
+}
+
++(NSError*)setData:(NSData *)data keyName:(NSString *)keyName path:(NSString *)path
+{
+    return [self setXAttrMetaData:data metaDataKey:keyName path:path];
+}
+
++(NSData *)getData:(NSString*)keyName path:(NSString*)path error:(NSError**)error
+{
+    return [self getXAttrMetaData:keyName path:path error:error];
 }
 
 

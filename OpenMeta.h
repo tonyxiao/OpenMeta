@@ -185,6 +185,18 @@ extern const double kMDItemOMMaxRating;
 +(NSError*)setString:(NSString*)string keyName:(NSString*)keyName path:(NSString*)path;
 +(NSString*)getString:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
 
++(NSError*)setNumber:(NSNumber*)number keyName:(NSString *)keyName path:(NSString *)path;
++(NSNumber *)getNumber:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
+
++(NSError*)setBoolValue:(BOOL)boolValue keyName:(NSString *)keyName path:(NSString *)path;
++(BOOL)getBoolValue:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
+
++(NSError*)setDate:(NSDate *)date keyName:(NSString *)keyName path:(NSString *)path;
++(NSDate *)getDate:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
+
++(NSError*)setData:(NSData *)data keyName:(NSString *)keyName path:(NSString *)path;
++(NSData *)getData:(NSString*)keyName path:(NSString*)path error:(NSError**)error;
+
 
 // If you have a 'lot' (ie 200 bytes to 4k) to set as a metadata on a file, then what you want to do
 // is use the setDictionaries call. You organize your data in an array of dictionaries, 
